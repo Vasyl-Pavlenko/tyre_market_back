@@ -1,4 +1,13 @@
-version: 1
-buildCommand: npm install && npm run build 
-publishDir: ./
-startCommand: node server.js
+services:
+  - type: web
+    name: my-node-app
+    env: node
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    branch: main
+    autoscale:
+      minInstances: 1
+      maxInstances: 3
+    envVars:
+      - key: NODE_ENV
+        value: production
