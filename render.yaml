@@ -1,0 +1,4 @@
+version: 1
+buildCommand: npm install && npm run build 
+publishDir: ./
+startCommand: node server.js
