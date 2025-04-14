@@ -32,29 +32,23 @@ startTyreCleanupJob(); // ✅
 console.log('🧹 Cron job для очищення шин активовано');
 
 // 🔌 Middleware
-const corsOptions = {
-  origin: process.env.FRONTEND_URL,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' })); 
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
 
 // 🔗 MongoDB
 mongoose
-  .connect(process.env.MONGO_URI || '')
+  .connect(process.env.MONGO_URI)
   .then(() => console.log('🔗 Підключено до MongoDB'))
   .catch((err) => {
     console.error('❌ MongoDB помилка:', err);
     process.exit(1);
   });
 
-// 📦 Роути
-app.use('/api/auth', authRoutes);
-app.use('/api/tyres', tyreRoutes);
+  // 📦 Роути
+  app.use('/api/auth', authRoutes);
+  app.use('/api/tyres', tyreRoutes);
 
-// 🚀 Старт
-app.listen(PORT, () => {
-  console.log(`✅ Сервер запущено на http://localhost:${PORT}`);
-});
+  // 🚀 Старт
+  app.listen(PORT, () => {
+    console.log(`✅ Сервер запущено на http://localhost:${PORT}`);
+  });  
