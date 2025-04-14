@@ -12,18 +12,43 @@ const PORT = process.env.PORT || 4000;
 
 // Налаштування multer для обмеження розміру файлів
 const upload = multer({
-  limits: { fileSize: 2 * 1024 * 1024 }, // Максимальний розмір файлів 2 МБ
+  limits: { fileSize: 2 * 1024 * 1024 },
 });
 
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: 'Файл занадто великий! Максимальний розмір - 2 МБ' });
+    }
+  }
+  next(err);
+});
+
+// 🕐 Cron job
+const startTyreCleanupJob = require('./crons/cleanExpiredTyres'); // ✅
+
+// 🧹 Запуск cron job
+startTyreCleanupJob(); // ✅
+console.log('🧹 Cron job для очищення шин активовано');
+
 // 🔌 Middleware
-app.use(cors());
+const corsOptions = {
+  origin: `http://172.30.16.1:3000`,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' })); 
 
 // 🔗 MongoDB
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI || '')
   .then(() => console.log('🔗 Підключено до MongoDB'))
-  .catch((err) => console.error('❌ MongoDB помилка:', err));
+  .catch((err) => {
+    console.error('❌ MongoDB помилка:', err);
+    process.exit(1);
+  });
 
 // 📦 Роути
 app.use('/api/auth', authRoutes);

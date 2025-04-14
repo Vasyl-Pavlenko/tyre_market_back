@@ -15,6 +15,11 @@ const tyreSchema = new mongoose.Schema(
     description: String,
     images: [String],
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    expiresAt: {
+      type: Date,
+      required: true,
+      default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    },
   },
   { timestamps: true },
 );
