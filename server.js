@@ -33,8 +33,8 @@ console.log('🧹 Cron job для очищення шин активовано')
 
 // 🔌 Middleware
 const corsOptions = {
-  origin: `http://172.30.16.1:3000`,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: process.env.FRONTEND_URL,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   credentials: true,
 };
 

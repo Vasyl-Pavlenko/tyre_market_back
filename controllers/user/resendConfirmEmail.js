@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer');
 
 // Транспортер для відправки email
 const transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
+  host: process.env.BREVO_HOST,
   port: 587,
   auth: {
     user: process.env.BREVO_USER,
