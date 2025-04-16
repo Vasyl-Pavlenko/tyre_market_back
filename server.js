@@ -6,6 +6,9 @@ const multer = require('multer');
 
 const authRoutes = require('./routes/authRoutes');
 const tyreRoutes = require('./routes/tyreRoutes');
+const profileRoutes = require('./routes/profile');
+const phoneRoutes = require('./routes/phoneRoutes'); 
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -44,11 +47,14 @@ mongoose
     process.exit(1);
   });
 
-  // 📦 Роути
-  app.use('/api/auth', authRoutes);
-  app.use('/api/tyres', tyreRoutes);
+// 📦 Роути
+app.use('/api/auth', authRoutes);
+app.use('/api/tyres', tyreRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/phone', phoneRoutes);
+app.use('/api/user', userRoutes);
 
-  // 🚀 Старт
-  app.listen(PORT, () => {
-    console.log(`✅ Сервер запущено на http://localhost:${PORT}`);
-  });  
+// 🚀 Старт
+app.listen(PORT, () => {
+  console.log(`✅ Сервер запущено на http://localhost:${PORT}`);
+});

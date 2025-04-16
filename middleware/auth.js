@@ -12,7 +12,7 @@ function auth(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = { id: decoded.id }; // Явно зберігаємо лише `id`, якщо нічого більше не треба
+    req.user = { id: decoded.id };
     next();
   } catch (err) {
     console.error('JWT перевірка не вдалася:', err.message);

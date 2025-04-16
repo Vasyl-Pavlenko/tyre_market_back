@@ -36,7 +36,7 @@ exports.register = async (req, res) => {
 
     // Генерація токена для підтвердження email
     const emailConfirmationToken = crypto.randomBytes(32).toString('hex');
-    const tokenExpires = Date.now() + 60 * 60 * 1000; // 1 година
+    const tokenExpires = Date.now() + 60 * 60 * 1000;
 
     // Створення користувача
     const newUser = new User({
@@ -57,8 +57,29 @@ exports.register = async (req, res) => {
     await transporter.sendMail({
       from: process.env.BREVO_FROM_EMAIL,
       to: newUser.email,
-      subject: 'Підтвердження пошти',
-      html: `<p>Натисніть <a href="${confirmUrl}">сюди</a> для підтвердження пошти. Посилання дійсне 1 годину.</p>`,
+      subject: 'Підтвердження реєстрації на сайті Omega Tyres',
+      html: `
+        <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 24px;">
+          <div style="max-width: 600px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 32px;">
+            <h2 style="color: #1e3a8a; text-align: center;">Ласкаво просимо до Omega Tyres! 🚗</h2>
+            <p style="font-size: 16px; color: #333;">
+              Дякуємо за реєстрацію на нашому сервісі. Щоб завершити процес, будь ласка, підтвердіть вашу електронну адресу.
+            </p>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${confirmUrl}" style="display: inline-block; background-color: #1e3a8a; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold;">
+                Підтвердити email
+              </a>
+            </div>
+            <p style="font-size: 14px; color: #666;">
+              Посилання дійсне протягом 1 години. Якщо ви не реєструвались на сайті Omega Tyres, просто ігноруйте цей лист.
+            </p>
+            <hr style="margin: 32px 0;">
+            <p style="font-size: 12px; color: #aaa; text-align: center;">
+              Omega Tyres – ваш надійний маркетплейс шин.
+            </p>
+          </div>
+        </div>
+      `,
     });
 
     res.status(201).json({ message: 'Реєстрація успішна. Перевірте пошту.' });

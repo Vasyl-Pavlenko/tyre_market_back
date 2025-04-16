@@ -35,7 +35,7 @@ exports.resendConfirmation = async (req, res) => {
 
     const token = crypto.randomBytes(32).toString('hex');
     user.emailConfirmationToken = token;
-    user.emailConfirmationTokenExpires = Date.now() + 60 * 60 * 1000; // 1 година
+    user.emailConfirmationTokenExpires = Date.now() + 60 * 60 * 1000;
 
     await user.save();
 
