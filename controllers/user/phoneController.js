@@ -9,10 +9,18 @@ exports.sendPhoneCode = async (req, res) => {
   try {
     const { phone } = req.body;
 
-    if (!phone || !/^\+380\d{9}$/.test(phone)) {
-      return res.status(400).json({
-        message: 'Вкажіть телефон у форматі +380XXXXXXXXX',
-      });
+    const rawPhone = phone.replace(/\D/g, '');
+
+    let normalizedPhone = null;
+    
+    if (/^0\d{9}$/.test(rawPhone)) {
+      normalizedPhone = '+38' + rawPhone;
+    } else if (/^380\d{9}$/.test(rawPhone)) {
+      normalizedPhone = '+' + rawPhone;
+    } else if (/^\+380\d{9}$/.test(phone)) {
+      normalizedPhone = phone;
+    } else {
+      return res.status(400).json({ message: 'Некоректний номер телефону' });
     }
 
     const user = await User.findById(req.user.id);
