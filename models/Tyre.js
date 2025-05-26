@@ -3,7 +3,19 @@ const mongoose = require('mongoose');
 const tyreSchema = new mongoose.Schema(
   {
     brand: String,
-    size: String,
+    model: String,
+    width: {
+      type: Number,
+      required: true,
+    },
+    height: {
+      type: Number,
+      required: true,
+    },
+    radius: {
+      type: Number,
+      required: true,
+    },
     season: String,
     vehicle: String,
     year: Number,
@@ -11,27 +23,42 @@ const tyreSchema = new mongoose.Schema(
     city: String,
     condition: String,
     price: Number,
+    quantity: Number,
     contact: String,
     description: String,
     images: [String],
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    views: { type: Number, default: 0 },
+    isViewed: {
+      type: Boolean,
+      default: false,
+    },
+    favoritesCount: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
+    isDeleted: { type: Boolean, default: false },
+    isExpired: { type: Boolean, default: false },
     expiresAt: {
       type: Date,
       required: true,
       default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     },
-    views: { type: Number, default: 0 }, // ✅ 1. Кількість переглядів
-    favoritesCount: { type: Number, default: 0 }, // ✅ 3. Кількість додавань до обраного
-    isActive: { type: Boolean, default: true }, // ✅ 4. Активне/неактивне оголошення
-    isDeleted: { type: Boolean, default: false }, // ✅ 5. М’яке видалення
     willBeDeletedAt: {
       type: Date,
       default: function () {
-        return new Date(this.expiresAt.getTime() + 90 * 24 * 60 * 60 * 1000); // 3 місяці після закінчення
+        return new Date(this.expiresAt.getTime() + 90 * 24 * 60 * 60 * 1000);
       },
     },
+    title: String, // для швидкого пошуку
   },
   { timestamps: true },
 );
+
+// автоматичне формування title
+tyreSchema.pre('save', function (next) {
+  this.title = `${this.brand} ${this.model} ${this.width}/${this.height} R${this.radius}`;
+  next();
+});
+
+tyreSchema.index({ title: 'text' });
 
 module.exports = mongoose.model('Tyre', tyreSchema);

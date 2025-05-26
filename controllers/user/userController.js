@@ -1,10 +1,12 @@
 const User = require('../../models/User');
-const bcrypt= require('bcryptjs');
+const bcrypt = require('bcryptjs');
 
-// Отримання поточного користувача
-exports.getMe = async (req, res) => {
+// @desc   Отримати поточний профіль користувача
+// @route  GET /api/user/profile
+// @access Private
+exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user.id).select('-passwordHash -__v');
 
     if (!user) {
       return res.status(404).json({ message: 'Користувача не знайдено' });
@@ -13,32 +15,30 @@ exports.getMe = async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error('Помилка при отриманні профілю:', err);
-    res.status(500).json({ message: 'Помилка сервера' });
+    res.status(500).json({ message: 'Не вдалося отримати профіль' });
   }
 };
 
-// 🔄 Оновлення профілю: імʼя, телефон, місто
+// @desc   Оновити профіль користувача
+// @route  PUT /api/user/profile
+// @access Private
 exports.updateProfile = async (req, res) => {
   try {
     const { name, phone, city } = req.body;
 
-    const user = await User.findById(req.user.id);
+    if (!name?.trim()) {
+      return res.status(400).json({ message: 'Імʼя обовʼязкове' });
+    }
 
+    const user = await User.findById(req.user.id);
+    
     if (!user) {
       return res.status(404).json({ message: 'Користувача не знайдено' });
     }
 
-    if (name) {
-      user.name = name;
-    }
-
-    if (phone) {
-      user.phone = phone;
-    }
-
-    if (city) {
-      user.city = city;
-    }
+    user.name = name.trim();
+    user.phone = phone || '';
+    user.city = city || '';
 
     await user.save();
 
@@ -49,35 +49,46 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// 🔒 Зміна пароля
-exports.changePassword = async (req, res) => {
-  try {
-    const { oldPassword, newPassword } = req.body;
+// @desc   Змінити пароль користувача
+// @route  PUT /api/user/password
+// @access Private
+exports.updatePassword = async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
 
-    if (!oldPassword || !newPassword) {
-      return res.status(400).json({ message: 'Старий та новий пароль обовʼязкові' });
+  try {
+    // Перевірка наявності всіх полів
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: 'Всі поля повинні бути заповнені' });
     }
 
-    // Знайдемо користувача за id з токена
-    const user = await User.findById(req.user.id);
+    // Перевірка, чи новий пароль співпадає з підтвердженням пароля
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'Новий пароль не збігається з підтвердженням пароля' });
+    }
 
+    // Перевірка, чи новий пароль відрізняється від старого
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ message: 'Новий пароль не може бути таким самим, як старий' });
+    }
+
+    // Знайти користувача по ID
+    const user = await User.findById(req.user.id);
+    
     if (!user) {
       return res.status(404).json({ message: 'Користувача не знайдено' });
     }
 
-    // Перевірка на відповідність старого пароля
-    const isMatch = await bcrypt.compare(oldPassword, user.passwordHash);
-
+    // Перевірка, чи правильний старий пароль
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Невірний старий пароль' });
+      return res.status(400).json({ message: 'Невірний поточний пароль' });
     }
 
-    // Генерація нового хешу для пароля
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    // Хешування нового пароля
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Оновлення пароля в базі
-    user.passwordHash = hashedPassword; // Оновлення passwordHash
+    // Оновлення пароля користувача
+    user.passwordHash = hashedPassword;
     await user.save();
 
     res.json({ message: 'Пароль успішно змінено' });
@@ -86,5 +97,3 @@ exports.changePassword = async (req, res) => {
     res.status(500).json({ message: 'Не вдалося змінити пароль' });
   }
 };
-
-

@@ -6,9 +6,10 @@ const multer = require('multer');
 
 const authRoutes = require('./routes/authRoutes');
 const tyreRoutes = require('./routes/tyreRoutes');
-const profileRoutes = require('./routes/profile');
+const favoriteRoutes = require('./routes/favoriteRoutes');
 const phoneRoutes = require('./routes/phoneRoutes'); 
 const userRoutes = require('./routes/userRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -50,9 +51,10 @@ mongoose
 // 📦 Роути
 app.use('/api/auth', authRoutes);
 app.use('/api/tyres', tyreRoutes);
-app.use('/api/profile', profileRoutes);
+app.use('/api/favorites', favoriteRoutes);
 app.use('/api/phone', phoneRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 🚀 Старт
 app.listen(PORT, () => {

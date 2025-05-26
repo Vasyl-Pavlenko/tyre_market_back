@@ -42,6 +42,7 @@ exports.sendPhoneCode = async (req, res) => {
     user.phoneToken = hashedToken;
     user.phoneTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
     user.phoneTokenAttempts = 0;
+
     await user.save();
 
     const message = `Ваш код підтвердження: ${rawToken}`;
@@ -84,6 +85,7 @@ exports.verifyPhoneCode = async (req, res) => {
 
     if (hashedInput !== user.phoneToken) {
       user.phoneTokenAttempts = (user.phoneTokenAttempts || 0) + 1;
+      
       await user.save();
 
       return res.status(400).json({ message: 'Невірний код' });
@@ -94,6 +96,7 @@ exports.verifyPhoneCode = async (req, res) => {
     user.phoneToken = undefined;
     user.phoneTokenExpires = undefined;
     user.phoneTokenAttempts = undefined;
+
     await user.save();
 
     console.log(`✅ Користувач ${user._id} підтвердив телефон ${user.phone}`);

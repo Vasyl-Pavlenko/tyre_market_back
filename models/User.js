@@ -14,6 +14,8 @@ const userSchema = new mongoose.Schema({
   phoneToken: { type: String },
   phoneTokenExpires: { type: Date },
   phoneTokenAttempts: { type: Number, default: 0 },
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tyre' }],
+  isAdmin: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model('User', userSchema);

@@ -6,7 +6,6 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Перевірка заповнення полів
     if (!email || !password) {
       return res.status(400).json({ message: 'Будь ласка, заповніть всі поля' });
     }

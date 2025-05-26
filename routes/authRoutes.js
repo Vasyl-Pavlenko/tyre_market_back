@@ -6,6 +6,8 @@ const { login } = require('../controllers/user/loginController');
 const { confirmEmail } = require('../controllers/user/confirmEmailController');
 const { resendConfirmation } = require('../controllers/user/resendConfirmEmail');
 
+const { forgotPassword, resetPassword } = require ('../controllers/auth/authController');
+
 // 👉 Реєстрація користувача
 router.post('/register', register);
 
@@ -17,5 +19,10 @@ router.post('/resend-confirmation', resendConfirmation);
 
 // 👉 Вхід
 router.post('/login', login);
+
+// 👉 Відновлення пароля
+router.post('/forgot-password', forgotPassword);
+
+router.post('/reset-password/:token', resetPassword);
 
 module.exports = router;

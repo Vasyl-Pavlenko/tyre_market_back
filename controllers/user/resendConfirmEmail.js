@@ -1,19 +1,6 @@
 const User = require('../../models/User');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-
-// Транспортер для відправки email
-const transporter = nodemailer.createTransport({
-  host: process.env.BREVO_HOST,
-  port: 587,
-  auth: {
-    user: process.env.BREVO_USER,
-    pass: process.env.BREVO_API_KEY,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+const { createEmailTemplate, sendEmail } = require('../../utils/sendEmail');
 
 exports.resendConfirmation = async (req, res) => {
   const { email } = req.body;
@@ -34,6 +21,7 @@ exports.resendConfirmation = async (req, res) => {
     }
 
     const token = crypto.randomBytes(32).toString('hex');
+    
     user.emailConfirmationToken = token;
     user.emailConfirmationTokenExpires = Date.now() + 60 * 60 * 1000;
 
@@ -41,10 +29,18 @@ exports.resendConfirmation = async (req, res) => {
 
     const confirmUrl = `${process.env.FRONTEND_URL}/confirm-email?token=${token}`;
 
-    await transporter.sendMail({
+    const html = createEmailTemplate({
+      title: 'Підтвердження пошти (повторно)',
+      body: 'Ми надіслали вам нове посилання для підтвердження вашої електронної адреси.',
+      buttonText: 'Підтвердити зараз',
+      buttonLink: confirmUrl,
+      footerNote: 'Посилання дійсне протягом 1 години.',
+    });
+
+    await sendEmail({
       to: user.email,
-      subject: 'Підтвердження пошти (повторно)',
-      html: `<p>Натисніть <a href="${confirmUrl}">сюди</a>, щоб підтвердити пошту. Посилання дійсне 1 годину.</p>`,
+      subject: 'Підтвердження пошти на Omega tyres (повторно)',
+      html,
     });
 
     res.status(200).json({ message: 'Посилання для підтвердження надіслано повторно ✅' });
