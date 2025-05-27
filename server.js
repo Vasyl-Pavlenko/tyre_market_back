@@ -3,6 +3,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const multer = require('multer');
+const sharp = require('sharp');
+const path = require('path');
+const fs = require('fs');
 
 const authRoutes = require('./routes/authRoutes');
 const tyreRoutes = require('./routes/tyreRoutes');
@@ -14,9 +17,40 @@ const adminRoutes = require('./routes/adminRoutes');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Налаштування multer для обмеження розміру файлів
+// Підключаємо CORS до всіх маршрутів, ДО роутів і middleware
+app.use(cors());
+
+// Розбір JSON (якщо потрібен)
+app.use(express.json({ limit: '10mb' }));
+
+// Зберігання файлів у пам'яті
+const storage = multer.memoryStorage();
 const upload = multer({
-  limits: { fileSize: 2 * 1024 * 1024 },
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+});
+
+// Маршрут завантаження
+app.post('/upload', upload.single('image'), async (req, res) => {
+  try {
+    const { buffer, originalname } = req.file;
+
+    const fileNameWithoutExt = path.parse(originalname).name;
+    const outputFileName = `${fileNameWithoutExt}-${Date.now()}.webp`;
+    const outputPath = path.join(__dirname, 'uploads', outputFileName);
+    const uploadDir = path.join(__dirname, 'uploads');
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir);
+    }
+
+    await sharp(buffer).resize({ width: 800 }).toFormat('webp').toFile(outputPath);
+
+    return res.status(200).json({ url: `/uploads/${outputFileName}` });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Помилка при обробці зображення' });
+  }
 });
 
 app.use((err, req, res, next) => {
@@ -34,10 +68,6 @@ const startTyreCleanupJob = require('./crons/cleanExpiredTyres'); // ✅
 // 🧹 Запуск cron job
 startTyreCleanupJob(); // ✅
 console.log('🧹 Cron job для очищення шин активовано');
-
-// 🔌 Middleware
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
 
 // 🔗 MongoDB
 mongoose
@@ -60,6 +90,8 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/phone', phoneRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 🚀 Старт
 app.listen(PORT, () => {
