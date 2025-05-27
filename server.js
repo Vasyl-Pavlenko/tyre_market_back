@@ -47,6 +47,11 @@ mongoose
     console.error('❌ MongoDB помилка:', err);
     process.exit(1);
   });
+  
+// 📡 Ping
+  app.get('/api/ping', (req, res) => {
+    res.status(200).json({ message: 'pong' });
+  });
 
 // 📦 Роути
 app.use('/api/auth', authRoutes);
