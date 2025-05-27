@@ -91,7 +91,14 @@ app.use('/api/phone', phoneRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, 'uploads'), {
+    setHeaders: (res, path) => {
+      res.set('Cache-Control', 'no-store');
+    },
+  }),
+);
 
 // 🚀 Старт
 app.listen(PORT, () => {
