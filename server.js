@@ -36,22 +36,39 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     const { buffer, originalname } = req.file;
 
     const fileNameWithoutExt = path.parse(originalname).name;
-    const outputFileName = `${fileNameWithoutExt}-${Date.now()}.webp`;
-    const outputPath = path.join(__dirname, 'uploads', outputFileName);
-    const uploadDir = path.join(__dirname, 'uploads');
+    const timestamp = Date.now();
+    const sizes = [400, 800, 1200];
+    const fileNames = [];
 
+    const uploadDir = path.join(__dirname, 'uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir);
     }
 
-    await sharp(buffer).resize({ width: 800 }).toFormat('webp').toFile(outputPath);
+    for (const width of sizes) {
+      const outputFileName = `${fileNameWithoutExt}-${timestamp}-${width}.webp`;
+      const outputPath = path.join(uploadDir, outputFileName);
 
-    return res.status(200).json({ url: `/uploads/${outputFileName}` });
+      await sharp(buffer)
+        .resize({ width })
+        .toFormat('webp')
+        .toFile(outputPath);
+
+      fileNames.push({ width, fileName: outputFileName });
+    }
+
+    return res.status(200).json({
+      images: fileNames.map(({ width, fileName }) => ({
+        width,
+        url: `/uploads/${fileName}`,
+      })),
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Помилка при обробці зображення' });
   }
 });
+
 
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
