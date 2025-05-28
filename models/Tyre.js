@@ -26,7 +26,7 @@ const tyreSchema = new mongoose.Schema(
     quantity: Number,
     contact: String,
     description: String,
-    images: [String],
+    type: [[{ url: String, width: Number }]],
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     views: { type: Number, default: 0 },
     isViewed: {
