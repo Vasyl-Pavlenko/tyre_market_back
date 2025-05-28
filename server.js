@@ -112,7 +112,7 @@ app.use(
   '/uploads',
   express.static(path.join(__dirname, 'uploads'), {
     setHeaders: (res, path) => {
-      res.set('Cache-Control', 'no-store');
+      res.set('Cache-Control', 'public, max-age=31536000, immutable');
     },
   }),
 );
