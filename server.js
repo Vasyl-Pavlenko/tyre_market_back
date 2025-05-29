@@ -5,6 +5,7 @@ const cors = require('cors');
 const multer = require('multer');
 const sharp = require('sharp');
 const path = require('path');
+const slugify = require('slugify');
 const fs = require('fs');
 
 const authRoutes = require('./routes/authRoutes');
@@ -36,6 +37,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     const { buffer, originalname } = req.file;
 
     const fileNameWithoutExt = path.parse(originalname).name;
+    const safeName = slugify(fileNameWithoutExt, { lower: true, strict: true });
     const timestamp = Date.now();
     const sizes = [400, 800, 1200];
     const fileNames = [];
@@ -46,13 +48,10 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     }
 
     for (const width of sizes) {
-      const outputFileName = `${fileNameWithoutExt}-${timestamp}-${width}.webp`;
+      const outputFileName = `${safeName}-${timestamp}-${width}.webp`;
       const outputPath = path.join(uploadDir, outputFileName);
 
-      await sharp(buffer)
-        .resize({ width })
-        .toFormat('webp')
-        .toFile(outputPath);
+      await sharp(buffer).resize({ width }).toFormat('webp').toFile(outputPath);
 
       fileNames.push({ width, fileName: outputFileName });
     }
