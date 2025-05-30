@@ -1,89 +1,79 @@
 require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const multer = require('multer');
-const sharp = require('sharp');
-const path = require('path');
-const slugify = require('slugify');
-const fs = require('fs');
+const streamifier = require('streamifier');
+
+const { cloudinary } = require('./utils/cloudinary');
 
 const authRoutes = require('./routes/authRoutes');
 const tyreRoutes = require('./routes/tyreRoutes');
 const favoriteRoutes = require('./routes/favoriteRoutes');
-const phoneRoutes = require('./routes/phoneRoutes'); 
+const phoneRoutes = require('./routes/phoneRoutes');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const startTyreCleanupJob = require('./crons/cleanExpiredTyres');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Підключаємо CORS до всіх маршрутів, ДО роутів і middleware
+// Middlewares
 app.use(cors());
-
-// Розбір JSON (якщо потрібен)
 app.use(express.json({ limit: '10mb' }));
 
-// Зберігання файлів у пам'яті
-const storage = multer.memoryStorage();
+// Multer: зберігання в памʼяті
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
 });
 
-// Маршрут завантаження
+// 🔼 Завантаження зображення
 app.post('/upload', upload.single('image'), async (req, res) => {
   try {
-    const { buffer, originalname } = req.file;
-
-    const fileNameWithoutExt = path.parse(originalname).name;
-    const safeName = slugify(fileNameWithoutExt, { lower: true, strict: true });
-    const timestamp = Date.now();
-    const sizes = [400, 800, 1200];
-    const fileNames = [];
-
-    const uploadDir = path.join(__dirname, 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ message: 'Файл не передано' });
     }
 
-    for (const width of sizes) {
-      const outputFileName = `${safeName}-${timestamp}-${width}.webp`;
-      const outputPath = path.join(uploadDir, outputFileName);
+    const uploadImageToCloudinary = () =>
+      new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'tyres',
+            format: 'webp',
+            transformation: [{ width: 1200, crop: 'limit' }],
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          },
+        );
+        streamifier.createReadStream(file.buffer).pipe(stream);
+      });
 
-      await sharp(buffer).resize({ width }).toFormat('webp').toFile(outputPath);
+    const result = await uploadImageToCloudinary();
 
-      fileNames.push({ width, fileName: outputFileName });
-    }
-
-    return res.status(200).json({
-      images: fileNames.map(({ width, fileName }) => ({
-        width,
-        url: `/uploads/${fileName}`,
-      })),
+    res.status(200).json({
+      image: {
+        width: result.width,
+        url: result.secure_url,
+      },
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Помилка при обробці зображення' });
+    console.error('Cloudinary upload error:', error);
+    res.status(500).json({ message: 'Помилка при завантаженні зображення' });
   }
 });
 
-
+// 🎯 Обробка помилок Multer
 app.use((err, req, res, next) => {
-  if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ message: 'Файл занадто великий! Максимальний розмір - 2 МБ' });
-    }
+  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ message: 'Файл занадто великий! Максимальний розмір - 2 МБ' });
   }
   next(err);
 });
-
-// 🕐 Cron job
-const startTyreCleanupJob = require('./crons/cleanExpiredTyres'); // ✅
-
-// 🧹 Запуск cron job
-startTyreCleanupJob(); // ✅
-console.log('🧹 Cron job для очищення шин активовано');
 
 // 🔗 MongoDB
 mongoose
@@ -93,11 +83,13 @@ mongoose
     console.error('❌ MongoDB помилка:', err);
     process.exit(1);
   });
-  
+
+// 🕐 Cron job
+startTyreCleanupJob();
+console.log('🧹 Cron job для очищення шин активовано');
+
 // 📡 Ping
-  app.get('/api/ping', (req, res) => {
-    res.status(200).json({ message: 'pong' });
-  });
+app.get('/api/ping', (req, res) => res.status(200).json({ message: 'pong' }));
 
 // 📦 Роути
 app.use('/api/auth', authRoutes);
@@ -106,15 +98,6 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/phone', phoneRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
-
-app.use(
-  '/uploads',
-  express.static(path.join(__dirname, 'uploads'), {
-    setHeaders: (res, path) => {
-      res.set('Cache-Control', 'no-store');
-    },
-  }),
-);
 
 // 🚀 Старт
 app.listen(PORT, () => {
