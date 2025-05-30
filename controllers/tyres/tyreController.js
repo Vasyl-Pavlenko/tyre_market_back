@@ -171,8 +171,13 @@ exports.getTyresByIds = async (req, res) => {
 };
 
 exports.createTyre = async (req, res) => {
+  const cleanedImages = (req.body.images || []).map((group) =>
+    Array.isArray(group) ? group.filter((img) => typeof img === 'object' && img?.url) : [],
+  );
+
   const newTyre = new Tyre({
     ...req.body,
+    images: cleanedImages,
     userId: req.user.id,
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   });
