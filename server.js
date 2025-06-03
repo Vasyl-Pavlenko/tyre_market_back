@@ -14,6 +14,7 @@ const favoriteRoutes = require('./routes/favoriteRoutes');
 const phoneRoutes = require('./routes/phoneRoutes');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const sitemapRouter = require('./routes/sitemapRouter');
 const startTyreCleanupJob = require('./crons/cleanExpiredTyres');
 
 const app = express();
@@ -93,16 +94,23 @@ mongoose
 startTyreCleanupJob();
 console.log('🧹 Cron job для очищення шин активовано');
 
+require('./crons/cronSitemap');
+console.log('🗺 Cron job для генерації sitemap активовано');
+
 // 📡 Ping
 app.get('/api/ping', (req, res) => res.status(200).json({ message: 'pong' }));
 
 // 📦 Роути
+app.use(express.static('public'));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/tyres', tyreRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/phone', phoneRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+
+app.use('/api/generate-sitemap', sitemapRouter);
 
 // 🚀 Старт
 app.listen(PORT, () => {

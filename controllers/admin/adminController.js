@@ -1,9 +1,10 @@
 const User = require('../../models/User');
 const Tyre = require('../../models/Tyre');
+const generateSitemap = require('../../scripts/generateSitemap');
 
 const moment = require('moment');
 
-exports.getStats =  async (req, res) => {
+exports.getStats = async (req, res) => {
   try {
     const users = await User.countDocuments();
     const tyres = await Tyre.countDocuments();
@@ -12,9 +13,9 @@ exports.getStats =  async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: 'Помилка сервера' });
   }
-}
+};
 
-exports.getDailyListings =  async (req, res) => {
+exports.getDailyListings = async (req, res) => {
   try {
     const today = moment().endOf('day');
     const sevenDaysAgo = moment().subtract(6, 'days').startOf('day');
@@ -41,7 +42,9 @@ exports.getDailyListings =  async (req, res) => {
 
     const fullData = [];
     for (let i = 0; i < 7; i++) {
-      const day = moment().subtract(6 - i, 'days').format('YYYY-MM-DD');
+      const day = moment()
+        .subtract(6 - i, 'days')
+        .format('YYYY-MM-DD');
       const found = data.find((d) => d._id === day);
 
       fullData.push({ date: day, count: found ? found.count : 0 });
@@ -51,7 +54,7 @@ exports.getDailyListings =  async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: 'Помилка сервера' });
   }
-}
+};
 
 exports.getDailyUsers = async (req, res) => {
   try {
@@ -84,9 +87,9 @@ exports.getDailyUsers = async (req, res) => {
       const day = moment()
         .subtract(6 - i, 'days')
         .format('YYYY-MM-DD');
-      
+
       const found = data.find((d) => d._id === day);
-      
+
       fullData.push({ date: day, count: found ? found.count : 0 });
     }
 
@@ -137,5 +140,16 @@ exports.getListingStatus = async (req, res) => {
     res.json(formatted);
   } catch (err) {
     res.status(500).json({ message: 'Помилка сервера' });
+  }
+};
+
+exports.getSiteMap = async (req, res) => {
+  try {
+    await generateSitemap();
+
+    res.status(200).json({ message: 'Sitemap generated' });
+  } catch (err) {
+    console.error('❌ Error generating sitemap:', err);
+    res.status(500).json({ message: 'Failed to generate sitemap' });
   }
 };
