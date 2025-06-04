@@ -19,14 +19,28 @@ const tyreSchema = new mongoose.Schema(
     season: String,
     vehicle: String,
     year: Number,
-    treadDepth: Number,
+    treadDepth: {
+      type: Number,
+      min: 0,
+      max: 12,
+    },
+    treadPercent: {
+      type: Number,
+      min: 0,
+      max: 100,
+    },
     city: String,
     condition: String,
     price: Number,
     quantity: Number,
     contact: String,
     description: String,
-    images: [[{ url: String, width: Number }]],
+    images: [
+      {
+        url: String,
+        width: Number,
+      },
+    ],
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     views: { type: Number, default: 0 },
     isViewed: {
@@ -48,14 +62,20 @@ const tyreSchema = new mongoose.Schema(
         return new Date(this.expiresAt.getTime() + 90 * 24 * 60 * 60 * 1000);
       },
     },
-    title: String, // для швидкого пошуку
+    title: String,
   },
   { timestamps: true },
 );
 
-// автоматичне формування title
 tyreSchema.pre('save', function (next) {
-  this.title = `${this.brand} ${this.model} ${this.width}/${this.height} R${this.radius}`;
+  const parts = [this.brand];
+
+  if (this.model) {
+    parts.push(this.model);
+  }
+
+  parts.push(`${this.width}/${this.height} R${this.radius}`);
+  this.title = parts.join(' ');
   next();
 });
 
