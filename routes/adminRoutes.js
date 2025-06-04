@@ -15,6 +15,6 @@ router.get('/stats/daily-listings', isAdmin, getDailyListings);
 router.get('/stats/daily-users', isAdmin, getDailyUsers);
 router.get('/stats/listing-categories', isAdmin, getListingCategories);
 router.get('/stats/listing-status', isAdmin, getListingStatus);
-router.get('/api/generate-sitemap', getSiteMap);
+router.get('/generate-sitemap', getSiteMap);
 
 module.exports = router;

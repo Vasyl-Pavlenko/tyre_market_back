@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getSiteMap } = require('../controllers/admin/adminController');
+const { serveSitemap } = require('../controllers/admin/adminController');
 
-router.get('/', getSiteMap);
+router.get('/sitemap.xml', serveSitemap);
 
 module.exports = router;

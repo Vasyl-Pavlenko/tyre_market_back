@@ -1,5 +1,7 @@
 const User = require('../../models/User');
 const Tyre = require('../../models/Tyre');
+const path = require('path');
+const fs = require('fs');
 const generateSitemap = require('../../scripts/generateSitemap');
 
 const moment = require('moment');
@@ -146,10 +148,21 @@ exports.getListingStatus = async (req, res) => {
 exports.getSiteMap = async (req, res) => {
   try {
     await generateSitemap();
-
     res.status(200).json({ message: 'Sitemap generated' });
   } catch (err) {
     console.error('❌ Error generating sitemap:', err);
     res.status(500).json({ message: 'Failed to generate sitemap' });
+  }
+};
+
+exports.serveSitemap = async (req, res) => {
+  try {
+    const sitemapXml = await generateSitemap();
+    
+    res.header('Content-Type', 'application/xml');
+    res.send(sitemapXml);
+  } catch (err) {
+    console.error('Sitemap generation error:', err);
+    res.status(500).send('Помилка при генерації sitemap');
   }
 };

@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const multer = require('multer');
 const streamifier = require('streamifier');
+const fs = require('fs');
+const path = require('path');
 
 const { cloudinary } = require('./utils/cloudinary');
 
@@ -101,7 +103,7 @@ console.log('🗺 Cron job для генерації sitemap активова�
 app.get('/api/ping', (req, res) => res.status(200).json({ message: 'pong' }));
 
 // 📦 Роути
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tyres', tyreRoutes);
@@ -109,8 +111,34 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/phone', phoneRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/', sitemapRouter);
 
-app.use('/api/generate-sitemap', sitemapRouter);
+// app.use('/api/generate-sitemap', sitemapRouter);
+
+const publicDir = path.join(__dirname, './public');
+
+function deleteFolderRecursive(folderPath) {
+  if (fs.existsSync(folderPath)) {
+    fs.readdirSync(folderPath).forEach((file) => {
+      const curPath = path.join(folderPath, file);
+
+      if (fs.lstatSync(curPath).isDirectory()) {
+        deleteFolderRecursive(curPath);
+      } else {
+        fs.unlinkSync(curPath);
+      }
+    });
+    fs.rmdirSync(folderPath);
+  }
+}
+
+if (fs.existsSync(publicDir)) {
+  deleteFolderRecursive(publicDir);
+  console.log('Стара папка public видалена');
+}
+
+fs.mkdirSync(publicDir, { recursive: true });
+console.log('Папка public створена');
 
 // 🚀 Старт
 app.listen(PORT, () => {
