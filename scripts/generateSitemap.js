@@ -5,6 +5,15 @@ const User = require('../models/User');
 
 const BASE_URL = process.env.FRONTEND_URL;
 
+function buildUrl(base, path) {
+  if (base.endsWith('/') && path.startsWith('/')) {
+    return base + path.slice(1);
+  } else if (!base.endsWith('/') && !path.startsWith('/')) {
+    return base + '/' + path;
+  }
+  return base + path;
+}
+
 async function generateSitemap() {
   const tyres = await Tyre.find({ isActive: true }).select('_id updatedAt');
   const users = await User.find({}).select('_id name');
@@ -13,7 +22,7 @@ async function generateSitemap() {
 
   urls.push(`
     <url>
-      <loc>${BASE_URL}/</loc>
+      <loc>${buildUrl(BASE_URL, '/')}</loc>
       <changefreq>weekly</changefreq>
       <priority>1.0</priority>
     </url>
@@ -22,7 +31,7 @@ async function generateSitemap() {
   tyres.forEach((tyre) => {
     urls.push(`
       <url>
-        <loc>${BASE_URL}/tyre/${tyre._id}</loc>
+        <loc>${buildUrl(BASE_URL, `/tyre/${tyre._id}`)}</loc>
         <lastmod>${tyre.updatedAt.toISOString()}</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.5</priority>
@@ -34,7 +43,7 @@ async function generateSitemap() {
     const slug = slugify(user.name);
     urls.push(`
       <url>
-        <loc>${BASE_URL}/user/${slug}-${user._id}</loc>
+        <loc>${buildUrl(BASE_URL, `/user/${slug}-${user._id}`)}</loc>
         <changefreq>monthly</changefreq>
         <priority>0.3</priority>
       </url>
