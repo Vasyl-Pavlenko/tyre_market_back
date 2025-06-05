@@ -58,6 +58,10 @@ const tyreSchema = new mongoose.Schema(
       },
     },
     title: String,
+    slug: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true },
 );
@@ -70,7 +74,10 @@ tyreSchema.pre('save', function (next) {
   }
 
   parts.push(`${this.width}/${this.height} R${this.radius}`);
+
   this.title = parts.join(' ');
+
+  this.slug = slugify(this.title, { lower: true, strict: true });
   next();
 });
 

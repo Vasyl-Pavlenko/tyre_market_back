@@ -170,6 +170,21 @@ exports.getTyresByIds = async (req, res) => {
   }
 };
 
+exports.slugRedirect = async (req, res) => {
+  const { id, slug } = req.params;
+  const tyre = await Tyre.findById(id);
+
+  if (!tyre) {
+    return res.status(404).send('Not found');
+  }
+
+  if (tyre.slug !== slug) {
+    return res.redirect(301, `/tyres/${id}/${tyre.slug}`);
+  }
+
+  res.json(tyre);
+};
+
 exports.createTyre = async (req, res) => {
   const cleanedImages = (req.body.images || []).map((group) =>
     Array.isArray(group) ? group.filter((img) => typeof img === 'object' && img?.url) : [],

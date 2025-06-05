@@ -14,6 +14,7 @@ const {
   deleteTyre,
   removeFromActiveTyres,
   getTyresByIds,
+  slugRedirect,
 } = require('../controllers/tyres/tyreController');
 
 // 👉 Отримати всі шини
@@ -43,5 +44,7 @@ router.delete('/:id', auth, deleteTyre);
 router.put('/:id', auth, removeFromActiveTyres);
 
 router.post('/by-ids', auth, getTyresByIds);
+
+router.get('/tyres/:id/:slug', slugRedirect)
 
 module.exports = router;
