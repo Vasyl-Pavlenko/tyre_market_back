@@ -172,14 +172,22 @@ exports.getTyresByIds = async (req, res) => {
 
 exports.slugRedirect = async (req, res) => {
   const { id, slug } = req.params;
-  const tyre = await Tyre.findById(id);
 
-  if (!tyre) {
-    return res.status(404).send('Not found');
-  }
+  try {
+    const tyre = await Tyre.findById(id);
 
-  if (tyre.slug !== slug) {
-    return res.redirect(301, `/tyres/${id}/${tyre.slug}`);
+    if (!tyre) {
+      return res.status(404).send('Not found');
+    }
+  } catch (error) {
+    console.error('Помилка при отриманні шин за ID:', error);
+    res.status(500).json({ message: 'Помилка сервера' });
+  }  
+
+  const correctSlug = tyre.slug || generateSlug(tyre);
+
+  if (slug !== correctSlug) {
+    return res.redirect(301, `/tyres/${id}/${correctSlug}`);
   }
 
   res.json(tyre);
