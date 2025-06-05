@@ -61,7 +61,6 @@ const tyreSchema = new mongoose.Schema(
     title: String,
     slug: {
       type: String,
-      required: true,
     },
   },
   { timestamps: true },
