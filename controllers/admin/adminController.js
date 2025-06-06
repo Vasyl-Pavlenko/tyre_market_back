@@ -158,7 +158,7 @@ exports.getSiteMap = async (req, res) => {
 exports.serveSitemap = async (req, res) => {
   try {
     const sitemapXml = await generateSitemap();
-    
+
     res.header('Content-Type', 'application/xml');
     res.send(sitemapXml);
   } catch (err) {

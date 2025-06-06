@@ -5,6 +5,15 @@ const User = require('../models/User');
 
 const BASE_URL = process.env.FRONTEND_URL;
 
+async function saveSitemapToFile() {
+  const sitemapXml = await generateSitemap();
+
+  const sitemapPath = path.join(__dirname, '../public/sitemap.xml');
+
+  fs.writeFileSync(sitemapPath, sitemapXml, 'utf8');
+  console.log('✅ Sitemap saved to public/sitemap.xml');
+}
+
 function buildUrl(base, path) {
   if (base.endsWith('/') && path.startsWith('/')) {
     return base + path.slice(1);
@@ -29,25 +38,40 @@ async function generateSitemap() {
   `);
 
   tyres.forEach((tyre) => {
+    const slug = tyre.slug ? slugify(tyre.slug) : '';
+
+    if (!slug) {
+      return;
+    }
+
     urls.push(`
-      <url>
-        <loc>${buildUrl(BASE_URL, `/tyre/${tyre._id}`)}</loc>
-        <lastmod>${tyre.updatedAt.toISOString()}</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.5</priority>
-      </url>
-    `);
+    <url>
+      <loc>${buildUrl(BASE_URL, `/tyre/${slug}-${tyre._id}`)}</loc>
+      <lastmod>${tyre.updatedAt.toISOString()}</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.5</priority>
+    </url>
+  `);
   });
 
   users.forEach((user) => {
+    if (!user.name) {
+      return;
+    }
+
     const slug = slugify(user.name);
+
+    if (!slug || slug === '-') {
+      return;
+    }
+    
     urls.push(`
-      <url>
-        <loc>${buildUrl(BASE_URL, `/user/${slug}-${user._id}`)}</loc>
-        <changefreq>monthly</changefreq>
-        <priority>0.3</priority>
-      </url>
-    `);
+    <url>
+      <loc>${buildUrl(BASE_URL, `/user/${slug}-${user._id}`)}</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.3</priority>
+    </url>
+  `);
   });
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -66,4 +90,4 @@ function slugify(text) {
     .replace(/\-\-+/g, '-');
 }
 
-module.exports = generateSitemap;
+module.exports = { generateSitemap, saveSitemapToFile };

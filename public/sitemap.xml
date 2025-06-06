@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+    <url>
+      <loc>http://localhost:3000/</loc>
+      <changefreq>weekly</changefreq>
+      <priority>1.0</priority>
+    </url>
+  
+
+    <url>
+      <loc>http://localhost:3000/user/enzo-67ffa7b71fd1e3645fdddc16</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.3</priority>
+    </url>
+  
+
+    <url>
+      <loc>http://localhost:3000/user/enzo-6821a3d96f05f87afb1b8b42</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.3</priority>
+    </url>
+  
+
+    <url>
+      <loc>http://localhost:3000/user/vasyl-6825e4dfa2e379110e73eed9</loc>
+      <changefreq>monthly</changefreq>
+      <priority>0.3</priority>
+    </url>
+  
+</urlset>

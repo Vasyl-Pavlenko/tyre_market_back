@@ -3,12 +3,13 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 const multer = require('multer');
 const streamifier = require('streamifier');
-const fs = require('fs');
-const path = require('path');
 
 const { cloudinary } = require('./utils/cloudinary');
+const { saveSitemapToFile } = require('./scripts/generateSitemap');
+const { preparePublicFolder } = require('./utils/publicFolder');
 
 const authRoutes = require('./routes/authRoutes');
 const tyreRoutes = require('./routes/tyreRoutes');
@@ -32,7 +33,7 @@ const upload = multer({
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
 });
 
-// 🔼 Завантаження зображення
+// Завантаження зображення
 app.post('/upload', upload.single('image'), async (req, res) => {
   try {
     const file = req.file;
@@ -49,10 +50,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
           transformation: [{ width: 1600, crop: 'limit' }],
         },
         (error, result) => {
-          if (error) {
-            return reject(error);
-          }
-
+          if (error) return reject(error);
           resolve(result);
         },
       );
@@ -75,7 +73,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
   }
 });
 
-// 🎯 Обробка помилок Multer
+// Обробка помилок Multer
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({ message: 'Файл занадто великий! Максимальний розмір - 2 МБ' });
@@ -83,7 +81,7 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// 🔗 MongoDB
+// Підключення до MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log('🔗 Підключено до MongoDB'))
@@ -92,17 +90,28 @@ mongoose
     process.exit(1);
   });
 
-// 🕐 Cron job
+// Запуск cron job для очищення шин
 startTyreCleanupJob();
 console.log('🧹 Cron job для очищення шин активовано');
 
+// Запуск cron job для генерації sitemap
 require('./crons/cronSitemap');
-console.log('🗺 Cron job для генерації sitemap активовано');
+console.log('🗺 Cron job для генерації sitemap активовано');
 
-// 📡 Ping
+// Підготовка папки public та генерація sitemap на старті
+(async () => {
+  try {
+    preparePublicFolder();
+    await saveSitemapToFile();
+  } catch (error) {
+    console.error('❌ Error saving sitemap at startup:', error);
+  }
+})();
+
+// Пінг для перевірки, що сервер працює
 app.get('/api/ping', (req, res) => res.status(200).json({ message: 'pong' }));
 
-// 📦 Роути
+// Роутинг
 app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/api/auth', authRoutes);
@@ -113,34 +122,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/', sitemapRouter);
 
-// app.use('/api/generate-sitemap', sitemapRouter);
-
-const publicDir = path.join(__dirname, './public');
-
-function deleteFolderRecursive(folderPath) {
-  if (fs.existsSync(folderPath)) {
-    fs.readdirSync(folderPath).forEach((file) => {
-      const curPath = path.join(folderPath, file);
-
-      if (fs.lstatSync(curPath).isDirectory()) {
-        deleteFolderRecursive(curPath);
-      } else {
-        fs.unlinkSync(curPath);
-      }
-    });
-    fs.rmdirSync(folderPath);
-  }
-}
-
-if (fs.existsSync(publicDir)) {
-  deleteFolderRecursive(publicDir);
-  console.log('Стара папка public видалена');
-}
-
-fs.mkdirSync(publicDir, { recursive: true });
-console.log('Папка public створена');
-
-// 🚀 Старт
+// Запуск сервера
 app.listen(PORT, () => {
   console.log(`✅ Сервер запущено на http://localhost:${PORT}`);
 });
