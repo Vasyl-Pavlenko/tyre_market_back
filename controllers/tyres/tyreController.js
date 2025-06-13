@@ -244,9 +244,9 @@ exports.renewTyre = async (req, res) => {
     }
 
     // Перевірка на існуючий статус isActive (не обов'язково, але може бути корисним)
-    if (tyre.isActive) {
-      return res.status(400).json({ message: 'Оголошення вже активно' });
-    }
+    // if (tyre.isActive) {
+    //   return res.status(400).json({ message: 'Оголошення вже активно' });
+    // }
 
     const now = new Date();
     const newExpiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // +30 днів

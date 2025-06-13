@@ -5,6 +5,10 @@ const User = require('../models/User');
 
 const BASE_URL = process.env.FRONTEND_URL;
 
+if (!BASE_URL) {
+  throw new Error('FRONTEND_URL не визначено в середовищі!');
+}
+
 async function saveSitemapToFile() {
   const sitemapXml = await generateSitemap();
 
@@ -64,7 +68,7 @@ async function generateSitemap() {
     if (!slug || slug === '-') {
       return;
     }
-    
+
     urls.push(`
     <url>
       <loc>${buildUrl(BASE_URL, `/user/${slug}-${user._id}`)}</loc>
