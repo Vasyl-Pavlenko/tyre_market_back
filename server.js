@@ -114,7 +114,7 @@ console.log('🗺 Cron job для генерації sitemap активован�
 app.get('/api/ping', (req, res) => res.status(200).json({ message: 'pong' }));
 
 // Роутинг
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tyres', tyreRoutes);
