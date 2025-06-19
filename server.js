@@ -18,6 +18,8 @@ const phoneRoutes = require('./routes/phoneRoutes');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const sitemapRouter = require('./routes/sitemapRouter');
+const seoPages = require('./routes/seoPages.js');
+
 const startTyreCleanupJob = require('./crons/cleanExpiredTyres');
 
 const app = express();
@@ -120,7 +122,8 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/phone', phoneRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/', sitemapRouter);
+app.use('/sitemap.xml', sitemapRouter);
+app.use('/guides', seoPages);
 
 // Запуск сервера
 app.listen(PORT, () => {
