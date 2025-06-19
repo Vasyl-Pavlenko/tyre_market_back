@@ -4,7 +4,7 @@ const router = express.Router();
 
 const staticDir = path.join(__dirname, '../static-pages');
 
-router.get('/guides/:slug', (req, res) => {
+router.get('/:slug', (req, res) => {
   const slug = req.params.slug;
   const filePath = path.join(staticDir, `${slug}.html`);
   
