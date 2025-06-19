@@ -123,6 +123,7 @@ app.use('/api/phone', phoneRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/sitemap.xml', sitemapRouter);
+app.use('/guides', seoPages);
 
 // Запуск сервера
 app.listen(PORT, () => {
