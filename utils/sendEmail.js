@@ -43,12 +43,18 @@ const createEmailTemplate = ({ title, body, buttonText, buttonLink, footerNote }
 
 // Обгортка для відправки email
 const sendEmail = async ({ to, subject, html }) => {
-  return transporter.sendMail({
-    from: process.env.BREVO_FROM_EMAIL,
-    to,
-    subject,
-    html,
-  });
+  try {
+    const info = await transporter.sendMail({
+      from: `"Omega Tyres" <${process.env.BREVO_USER}>`,
+      to,
+      subject,
+      html,
+    });
+    console.log(`✅ Лист надіслано на ${to}: ${info.messageId}`);
+  } catch (err) {
+    console.error('❌ Помилка при надсиланні листа:', err);
+    throw err;
+  }
 };
 
 module.exports = {
